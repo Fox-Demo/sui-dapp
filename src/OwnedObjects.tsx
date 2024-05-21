@@ -7,7 +7,6 @@ import { Button, Flex, Heading, Text } from "@radix-ui/themes";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { MIST_PER_SUI } from "@mysten/sui.js/utils";
 import { Object } from "./Object";
-import { SuiObjectData } from "@mysten/sui.js/client";
 
 const MOCK_RECEIVER =
   "0x54d52d2b0edf7271ef24e50e9f04ab43c0fe5bdd064abddbedc87f13d29f56a5";
@@ -17,11 +16,11 @@ const TREASURY = {
   id: "0x9b3d9d6046bd83753a0615fcc4023e7204ff4d074dfe663b7075d8dd9afe0c53",
 };
 
-function createTxb(treasury: SuiObjectData) {
+function createTxb() {
   //Assume signer is the owner of the treasury object -> success
   const txb = new TransactionBlock();
   const mintObject = txb.moveCall({
-    arguments: [txb.objectRef(treasury), txb.pure.u64(MIST_PER_SUI)],
+    arguments: [txb.object(TREASURY.id), txb.pure.u64(MIST_PER_SUI)],
     typeArguments: [TREASURY.type], // Generic type <T>
     target: `0x2::coin::mint`, // Function
   });
@@ -79,7 +78,7 @@ export function OwnedObjects() {
 
           signAndExecuteTransactionBlock(
             {
-              transactionBlock: createTxb(cartTreasury?.data),
+              transactionBlock: createTxb(),
               chain: "sui:devnet",
             },
             {
