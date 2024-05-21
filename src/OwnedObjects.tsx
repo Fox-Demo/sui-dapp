@@ -7,6 +7,7 @@ import { Button, Flex, Heading, Text } from "@radix-ui/themes";
 import { TransactionBlock } from "@mysten/sui.js/transactions";
 import { MIST_PER_SUI } from "@mysten/sui.js/utils";
 import { Object } from "./Object";
+import { ObjectOwner, SuiObjectData } from "@mysten/sui.js/client";
 
 const MOCK_RECEIVER =
   "0x54d52d2b0edf7271ef24e50e9f04ab43c0fe5bdd064abddbedc87f13d29f56a5";
@@ -29,6 +30,23 @@ function createTxb() {
   return txb;
 }
 
+function isAddressOwnerType(
+  objectOwner: ObjectOwner | null | undefined,
+): objectOwner is {
+  AddressOwner: string;
+} {
+  if (!objectOwner) return false;
+  return objectOwner.hasOwnProperty("AddressOwner");
+}
+
+function isAddressOwner(currentAddress: string, object: SuiObjectData) {
+  if (!object.owner) return false;
+  return (
+    isAddressOwnerType(object.owner) &&
+    object.owner.AddressOwner === currentAddress
+  );
+}
+
 export function OwnedObjects() {
   const account = useCurrentAccount();
   const { mutate: signAndExecuteTransactionBlock } =
@@ -46,6 +64,9 @@ export function OwnedObjects() {
     "getObject",
     {
       id: TREASURY.id,
+      options: {
+        showOwner: true,
+      },
     },
     {
       enabled: !!account,
@@ -73,20 +94,23 @@ export function OwnedObjects() {
       )}
       <Button
         onClick={() => {
-          if (!cartTreasury?.data)
-            throw new Error("Cart treasury object not found");
-
-          signAndExecuteTransactionBlock(
-            {
-              transactionBlock: createTxb(),
-              chain: "sui:devnet",
-            },
-            {
-              onSuccess: (result) => {
-                console.log("executed transaction block", result);
-              },
-            },
-          );
+          if (cartTreasury?.data) {
+            if (isAddressOwner(account.address, cartTreasury.data)) {
+              signAndExecuteTransactionBlock(
+                {
+                  transactionBlock: createTxb(),
+                  chain: "sui:devnet",
+                },
+                {
+                  onSuccess: (result) => {
+                    console.log("executed transaction block", result);
+                  },
+                },
+              );
+            } else {
+              console.error("You are not the owner of the treasury object");
+            }
+          }
         }}
       >
         Mint
