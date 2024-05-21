@@ -30,12 +30,9 @@ function createTxb() {
   return txb;
 }
 
-function isAddressOwnerType(
-  objectOwner: ObjectOwner | null | undefined,
-): objectOwner is {
+function isAddressOwnerType(objectOwner: ObjectOwner): objectOwner is {
   AddressOwner: string;
 } {
-  if (!objectOwner) return false;
   return objectOwner.hasOwnProperty("AddressOwner");
 }
 
